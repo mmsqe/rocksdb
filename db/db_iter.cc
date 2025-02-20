@@ -81,6 +81,7 @@ DBIter::DBIter(Env* _env, const ReadOptions& read_options,
       timestamp_ub_(read_options.timestamp),
       timestamp_lb_(read_options.iter_start_ts),
       timestamp_size_(timestamp_ub_ ? timestamp_ub_->size() : 0) {
+  std::cout << "mm-timestamp_lb_: " << timestamp_lb_ << std::endl;
   RecordTick(statistics_, NO_ITERATOR_CREATED);
   if (pin_thru_lifetime_) {
     pinned_iters_mgr_.StartPinning();
@@ -1479,6 +1480,7 @@ bool DBIter::IsVisible(SequenceNumber sequence, const Slice& ts,
                             ? sequence <= sequence_
                             : read_callback_->IsVisible(sequence);
 
+  printf("mm-timestamp_ub0: %s, timestamp_lb_: %s\n", timestamp_ub_, timestamp_lb_);
   bool visible_by_ts =
       (timestamp_ub_ == nullptr ||
        user_comparator_.CompareTimestamp(ts, *timestamp_ub_) <= 0) &&

@@ -10,9 +10,12 @@
 #include "rocksdb/c.h"
 
 #include <cstdlib>
+#include <iomanip>
+#include <iostream>
 #include <map>
 #include <unordered_set>
 #include <vector>
+#include <execinfo.h>
 
 #include "port/port.h"
 #include "rocksdb/advanced_cache.h"
@@ -372,10 +375,31 @@ struct rocksdb_comparator_t : public Comparator {
     return (*compare_)(state_, a.data(), a.size(), b.data(), b.size());
   }
 
+  void PrintStackTrace() const {
+    const int max_frames = 128;
+    void* buffer[max_frames];
+    int nptrs = backtrace(buffer, max_frames);
+    char** strings = backtrace_symbols(buffer, nptrs);
+    if (strings == nullptr) {
+      std::cerr << "Error: backtrace_symbols" << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < nptrs; ++i) {
+      std::cout << strings[i] << std::endl;
+    }
+    free(strings);
+  }
+
   int CompareTimestamp(const Slice& a_ts, const Slice& b_ts) const override {
     if (compare_ts_ == nullptr) {
       return 0;
     }
+    std::cout << "mm-b_ts.data: ";
+    for (size_t i = 0; i < b_ts.size(); ++i) {
+      std::cout << std::hex << std::setw(2) << std::setfill('0')
+                << (int)(unsigned char)b_ts.data()[i] << " ";
+    }
+    std::cout << std::dec << std::endl;
     return (*compare_ts_)(state_, a_ts.data(), a_ts.size(), b_ts.data(),
                           b_ts.size());
   }
